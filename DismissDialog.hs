@@ -88,9 +88,13 @@ detectChrome waitTimeInSec action = fix $ \self -> do
         ExitFailure ec' ->
             putStrLn $ "unexpected exitcode: " ++ show ec'
 
-detectAndDismissDialog :: T.Text -> (Int,Int) -> WindowId -> IO (Maybe ())
-detectAndDismissDialog patFile (cancelDX,cancelDY) winId = do
-    result <- detectDialog patFile winId
+detectAndDismissDialog :: [(T.Text,(Int,Int))] -> WindowId -> IO (Maybe ())
+detectAndDismissDialog pats winId = do
+    let detect' (patFile, (cancelDX,cancelDY)) =
+            (fmap. fmap)
+                (\(x,y) -> (x+cancelDX,y+cancelDY))
+                (detectDialog patFile winId)
+    result <- firstSuccessfulM (map detect' pats)
     case result of
         Just (x,y) -> do
             (ExitSuccess,_) <-
@@ -98,8 +102,8 @@ detectAndDismissDialog patFile (cancelDX,cancelDY) winId = do
                      "xdotool"
                      [ "mousemove"
                      , "-window", winId
-                     , fromString (show $ x + cancelDX)
-                     , fromString (show $ y + cancelDY)
+                     , fromString (show x)
+                     , fromString (show y)
                      ]
                      ""
             threadDelay (floor (0.2 * 1000 * 1000 :: Double))
@@ -129,4 +133,4 @@ main :: IO ()
 main = do
     let dialog = "dialog_458_123.jpg" :: FilePath
         Just loc = getCancelLoc (FP.encodeString $ basename dialog)
-    detectChrome 2 (detectAndDismissDialog (fpToText dialog) loc)
+    detectChrome 2 (detectAndDismissDialog [(fpToText dialog,loc)])
