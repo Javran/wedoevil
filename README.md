@@ -29,3 +29,8 @@ popd
 
 google-chrome "$@"
 ```
+
+## When this script does not detect the dialog
+
+Take a screenshot of the dialog, and replace `dialog.jpg` with it.
+Also you need to edit [this line](https://github.com/Javran/wedoevil/blob/318059e8dbcbaf830cc284745a9c3b53ef10251d/DismissDialog.hs#L49) accordingly: while `(x,y)` means the detected top-left coordinate of `dialog.jpg`, `(x+458,y+123)` is the place where you can click `Cancel` button.

@@ -43,7 +43,6 @@ detectDialog winId = do
                     , "dialog.jpg"
                     ]
                     ""
-                T.putStrLn out
                 case reads (T.unpack out) :: [((Int,Int), String)] of
                     [((x,y),xs)]
                         | all isSpace xs -> pure (Just (winId, (x+458,y+123)))
@@ -69,7 +68,6 @@ detectChrome waitTimeInSec = fix $ \self -> do
         ExitSuccess -> do
             -- INVARIANT: "results" is non-empty
             let results = T.lines resultsRaw
-            mapM_ print results
             (coords :: [First (T.Text, (Int,Int))]) <- coerce (mapM detectDialog results)
             case getFirst (mconcat coords) of
                 Nothing -> do
