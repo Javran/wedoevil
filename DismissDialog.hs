@@ -59,9 +59,11 @@ detectDialog patFile winId = do
                         | all isSpace xs -> pure (Just loc)
                     _ -> pure Nothing
 
-detectChrome :: Int -> (WindowId -> IO (Maybe ())) -> IO ()
+detectChrome :: Double -> (WindowId -> IO (Maybe ())) -> IO ()
 detectChrome waitTimeInSec action = fix $ \self -> do
-    let waitTimeInMicro = waitTimeInSec * 1000 * 1000
+    let waitAndRetry = threadDelay waitTimeInMicro >> self
+          where
+            waitTimeInMicro = floor (waitTimeInSec * 1000 * 1000)
     (ec, resultsRaw) <-
         procStrict
             "xdotool"
@@ -72,19 +74,15 @@ detectChrome waitTimeInSec action = fix $ \self -> do
             ] ""
 
     case ec of
-        ExitFailure 1 -> do
-            putStrLn "xdotool: no matching window detected"
-            threadDelay waitTimeInMicro
-            self
+        ExitFailure 1 ->
+            putStrLn "xdotool: no matching window detected" >> waitAndRetry
         ExitSuccess -> do
             -- INVARIANT: "results" is non-empty
             let results = T.lines resultsRaw
             mcoord <- firstSuccessfulM (map action results)
             case mcoord of
-                Nothing -> do
-                    putStrLn "no dialog found."
-                    threadDelay waitTimeInMicro
-                    self
+                Nothing ->
+                    putStrLn "no dialog found." >> waitAndRetry
                 Just () ->
                     putStrLn "Done"
         ExitFailure ec' ->
@@ -145,4 +143,4 @@ main = do
         _ -> do
             putStrLn "Sample files:"
             mapM_ print ys
-            detectChrome 2 (detectAndDismissDialog ys)
+            detectChrome 0.2 (detectAndDismissDialog ys)
