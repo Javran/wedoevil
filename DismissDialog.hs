@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module Main where
 
-import Turtle hiding (x, f, some)
+import Turtle hiding (x, f, some, fp)
 import qualified Data.Text as T
 import Control.Concurrent
 import Data.Function
@@ -12,9 +12,11 @@ import Prelude hiding (FilePath)
 import System.IO hiding (FilePath)
 import qualified Filesystem.Path.CurrentOS as FP
 import Data.Char
+import Data.Maybe
 import Control.Applicative
 import qualified Text.ParserCombinators.ReadP as P
 import Control.Monad
+import qualified Control.Foldl as Fold
 
 type WindowId = T.Text
 
@@ -131,6 +133,16 @@ getCancelLoc xs = case P.readP_to_S pCancelLoc xs of
 
 main :: IO ()
 main = do
-    let dialog = "dialog_458_123.jpg" :: FilePath
-        Just loc = getCancelLoc (FP.encodeString $ basename dialog)
-    detectChrome 2 (detectAndDismissDialog [(fpToText dialog,loc)])
+    let toPatternInfo fp = do
+            ext <- extension fp
+            guard (T.toLower ext `elem` ["png","jpg","bmp"])
+            loc <- getCancelLoc (FP.encodeString $ basename fp)
+            pure (fpToText fp, loc)
+    xs <- fold (ls "sample") Fold.list
+    let ys = mapMaybe toPatternInfo xs
+    case ys of
+        [] -> error "no sample file detected."
+        _ -> do
+            putStrLn "Sample files:"
+            mapM_ print ys
+            detectChrome 2 (detectAndDismissDialog ys)

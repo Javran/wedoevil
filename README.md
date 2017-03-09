@@ -32,5 +32,15 @@ google-chrome "$@"
 
 ## When this script does not detect the dialog
 
-Take a screenshot of the dialog, and replace `dialog.jpg` with it.
-Also you need to edit [this line](https://github.com/Javran/wedoevil/blob/318059e8dbcbaf830cc284745a9c3b53ef10251d/DismissDialog.hs#L49) accordingly: while `(x,y)` means the detected top-left coordinate of `dialog.jpg`, `(x+458,y+123)` is the place where you can click `Cancel` button.
+1. Take a screenshot of the dialog. crop it properly so it only includes the content of the dialog
+  and the `Cancel` button.
+2. Locate the coordiate of the cancel button in your screenshot. (e.g. `(458,123)`)
+3. Rename the screenshot into `<filename>_<x>_<y>.<ext>`:
+
+    - `<filename>` can be anything you like
+    - `<x>` and `<y>` are coordiates you found in previous step
+    - `<ext>` is the extension name, currently only `png`, `jpg` and `bmp` are supported.
+
+4. Store your screenshot under `sample` directory.
+5. (optional) share the sample file by either making a Pull Request
+  or uploading your sample file and let me know where it locates by [opening a new issue](https://github.com/Javran/wedoevil/issues/new).
